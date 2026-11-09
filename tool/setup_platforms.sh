@@ -29,14 +29,26 @@ if "UIBackgroundModes" not in t:
     t = t.replace("</dict>\n</plist>", "\t<key>UIBackgroundModes</key>\n\t<array>\n\t\t<string>remote-notification</string>\n\t</array>\n</dict>\n</plist>")
 t = re.sub(r"(<key>CFBundleDisplayName</key>\s*<string>)[^<]*", r"\1SmartBell", t)
 p.write_text(t)
+
+# --- Android Gradle: minSdk 23 + core library desugaring (needed by flutter_local_notifications) ---
+import glob
+for g in glob.glob("android/app/build.gradle*"):
+    f = pathlib.Path(g); c = f.read_text(); kts = g.endswith(".kts")
+    if "desugar_jdk_libs" in c:
+        continue
+    c = re.sub(r"minSdk(Version)?\s*=?\s*flutter\.minSdkVersion", "minSdk = 23" if kts else "minSdkVersion 23", c)
+    c = re.sub(r"(compileOptions\s*\{)", r"\1\n        " + ("isCoreLibraryDesugaringEnabled = true" if kts else "coreLibraryDesugaringEnabled true"), c, count=1)
+    dep = 'coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")' if kts else "coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'"
+    c += "\ndependencies {\n    " + dep + "\n}\n"
+    f.write_text(c)
+    print("Patched", g)
 print("Native settings applied.")
 PY
 
 cat <<'MSG'
 
 Next (manual, see docs/FIREBASE.md and docs/BUILD.md):
-  * Android: raise minSdk to 23 and enable core library desugaring in android/app/build.gradle(.kts)
-    (required by flutter_local_notifications).
+  * Android: minSdk 23 and core library desugaring were applied automatically - check the diff of android/app/build.gradle(.kts).
   * iOS: open ios/Runner.xcworkspace, add the "Push Notifications" and "Background Modes > Remote notifications"
     capabilities, set your signing team, and upload an APNs key in the Firebase console.
 MSG
