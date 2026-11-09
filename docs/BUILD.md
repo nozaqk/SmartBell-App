@@ -23,3 +23,12 @@ Requirements: Flutter >= 3.27 (Dart >= 3.6), Android Studio (Android SDK), Xcode
 with the GitHub CLI. Run it where Flutter, the Android SDK and `gh auth login` are available (your computer or a Codespace).
 Bump `version:` in `pubspec.yaml` for each release. Use `--no-publish` to build only. The APK embeds the Firebase client keys
 and API URL from `firebase.env`, so publish it only from a repository you are comfortable sharing those with.
+
+## GitHub Actions pre-release (`.github/workflows/release.yml`)
+Builds the release APK on GitHub and attaches it to a **pre-release**.
+1. Repository → Settings → Secrets and variables → Actions → add secrets: `API_URL` (required, e.g. `https://smartbell-backend.onrender.com`),
+   and optionally `SCHOOL_SLUG`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`, `FIREBASE_SENDER_ID`, `FIREBASE_APP_ID_ANDROID`.
+2. Start a build: `git tag v1.0.0-pre && git push origin v1.0.0-pre`, or Actions → *Build Android pre-release* → Run workflow (enter the tag).
+3. When it finishes, the APK is under Releases (marked *Pre-release*). If the build fails, open the run log: the first run will likely report
+   compile errors from `flutter analyze`/`flutter build` because the code has not been compiled before; send the log and the errors can be fixed.
+The APK is debug-signed (installable for testing). The secrets end up inside the APK as client configuration.
