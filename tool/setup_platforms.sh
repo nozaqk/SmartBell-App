@@ -7,6 +7,9 @@ cd "$(dirname "$0")/.."
 command -v flutter >/dev/null || { echo "Flutter SDK (>= 3.27) is required: https://docs.flutter.dev/get-started/install"; exit 1; }
 
 flutter create --platforms=android,ios --org com.mozack --project-name smartbell .
+# Flutter creates a sample widget test when the project has no widget_test.dart.
+# It targets the generated template rather than SmartBell and must not enter CI.
+rm -f test/widget_test.dart
 flutter pub get
 
 python3 - <<'PY'
