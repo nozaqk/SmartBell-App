@@ -17,11 +17,9 @@ Push (FCM → APNs on iOS): foreground, background and terminated handling, tap-
 (`route` in the push data), token registration after sign-in, token refresh, token removal on sign-out.
 Tokens: refresh token in Keychain / EncryptedSharedPreferences, access token in memory only, automatic rotation on 401.
 
-## Status — read this
-This code was written in an environment **without the Flutter/Dart SDK** (pub.dev and Google storage were
-unreachable), so it has **not been compiled, analysed or run**, and the tests in `test/` have **not been executed**.
-Before shipping, run `flutter pub get`, `flutter analyze` and `flutter test` and fix anything they report.
-Push delivery on real Android and iOS devices is likewise unverified.
+## Verification
+The Android workflow runs `flutter analyze`, `flutter test` and a release APK build. The API tests use a mock HTTP
+client; a passing build does not verify sign-in against the live backend, push delivery on a device, or the iOS build.
 
 ## Quick start
 ```bash
