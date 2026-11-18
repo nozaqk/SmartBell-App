@@ -7,8 +7,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-[ -f firebase.env ] || { echo "Create firebase.env first (copy firebase.env.example). API_URL must be your https Render URL."; exit 1; }
-grep -q '^API_URL=https://' firebase.env || echo "WARNING: API_URL in firebase.env is not an https URL."
+[ -f firebase.env ] || { echo "Copy firebase.env.example to firebase.env first. The hosted backend works without Firebase settings."; exit 1; }
+if grep -q '^API_URL=.' firebase.env && ! grep -q '^API_URL=https://' firebase.env; then
+  echo "WARNING: Use an HTTPS API_URL for release builds, or leave it empty to use the hosted backend."
+fi
 [ -d android ] || ./tool/setup_platforms.sh
 
 flutter pub get
