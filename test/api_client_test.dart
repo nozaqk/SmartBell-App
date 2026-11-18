@@ -3,12 +3,26 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:smartbell/config.dart';
 import 'package:smartbell/core/api_client.dart';
 import 'package:smartbell/core/token_store.dart';
 
 http.Response json(Object body, [int status = 200]) => http.Response(jsonEncode(body), status, headers: {'content-type': 'application/json'});
 
 void main() {
+  test('API calls use the configured backend with the /api/v1 prefix', () async {
+    const override = String.fromEnvironment('API_URL');
+    final origin = override.isEmpty ? 'https://smartbell-backend.onrender.com' : override;
+    late Uri requested;
+    final client = MockClient((req) async {
+      requested = req.url;
+      return json({});
+    });
+    final api = ApiClient(baseUrl: AppConfig.apiUrl, store: MemoryTokenStore(), client: client);
+    await api.get('/mobile/me');
+    expect(requested.toString(), '$origin/api/v1/mobile/me');
+  });
+
   test('login stores the refresh token and sends the bearer token afterwards', () async {
     final seen = <String?>[];
     final client = MockClient((req) async {

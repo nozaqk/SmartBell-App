@@ -7,8 +7,9 @@ Requirements: Flutter >= 3.27 (Dart >= 3.6), Android Studio (Android SDK), Xcode
    `smartbell_bells` and the iOS `remote-notification` background mode.
 2. Android: `setup_platforms.sh` sets `minSdk = 23` and core library desugaring (needed by flutter_local_notifications); check the diff of `android/app/build.gradle(.kts)`.
 3. Configuration is passed at build time (no secrets in the repo):
-   `--dart-define-from-file=firebase.env` (see `firebase.env.example`). `API_URL` must be the HTTPS backend URL in release builds.
-   On the Android emulator the default `http://10.0.2.2:3000` reaches a backend running on your computer.
+   `--dart-define-from-file=firebase.env` (see `firebase.env.example`). An omitted or empty `API_URL` uses
+   `https://smartbell-backend.onrender.com`. To override it, use an HTTPS origin without `/api/v1` or a trailing slash.
+   For local development on an Android emulator, use `API_URL=http://10.0.2.2:3000` to reach a backend on your computer.
 4. Run / test: `flutter run --dart-define-from-file=firebase.env`, `flutter analyze`, `flutter test`.
 
 ## Release
@@ -25,10 +26,10 @@ Bump `version:` in `pubspec.yaml` for each release. Use `--no-publish` to build 
 and API URL from `firebase.env`, so publish it only from a repository you are comfortable sharing those with.
 
 ## GitHub Actions pre-release (`.github/workflows/release.yml`)
-Builds the release APK on GitHub and attaches it to a **pre-release**.
-1. Repository → Settings → Secrets and variables → Actions → add secrets: `API_URL` (required, e.g. `https://smartbell-backend.onrender.com`),
-   and optionally `SCHOOL_SLUG`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`, `FIREBASE_SENDER_ID`, `FIREBASE_APP_ID_ANDROID`.
-2. Start a build: `git tag v1.0.0-pre && git push origin v1.0.0-pre`, or Actions → *Build Android pre-release* → Run workflow (enter the tag).
-3. When it finishes, the APK is under Releases (marked *Pre-release*). If the build fails, open the run log: the first run will likely report
-   compile errors from `flutter analyze`/`flutter build` because the code has not been compiled before; send the log and the errors can be fixed.
+1. The workflow uses the hosted backend by default. To override it, set the `API_URL` repository secret under
+   Settings → Secrets and variables → Actions. `SCHOOL_SLUG`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`,
+   `FIREBASE_SENDER_ID` and `FIREBASE_APP_ID_ANDROID` are also optional.
+2. To check a fix **without publishing**, open Actions → *Build Android pre-release* → Run workflow, select the branch
+   containing the fix, and leave the tag empty. This runs analysis, tests and the release APK build. Re-running an old job uses its original commit.
+3. To publish the APK under Releases as a **pre-release**, supply the intended tag in the manual run, or push a `v*` tag.
 The APK is debug-signed (installable for testing). The secrets end up inside the APK as client configuration.

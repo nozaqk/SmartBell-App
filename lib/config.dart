@@ -1,8 +1,12 @@
 /// Build-time configuration, injected with --dart-define (see README). Nothing secret lives here:
 /// Firebase client keys identify the project but do not grant admin access.
 class AppConfig {
-  /// Backend base URL without trailing slash. 10.0.2.2 reaches the host machine from the Android emulator.
-  static const apiUrl = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:3000');
+  static const _apiUrlOverride = String.fromEnvironment('API_URL');
+
+  /// Backend origin only; ApiClient adds /api/v1. An unset or empty override uses the hosted backend.
+  static const apiUrl = _apiUrlOverride == ''
+      ? 'https://smartbell-backend.onrender.com'
+      : _apiUrlOverride;
 
   /// Optional: pins login to one school when several share the backend.
   static const schoolSlug = String.fromEnvironment('SCHOOL_SLUG', defaultValue: '');
