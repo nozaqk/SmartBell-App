@@ -1,19 +1,26 @@
-name: Build Android pre-release
+name: Publish Android APK
 
-# Runs when you push a version tag (git tag v1.0.0 && git push origin v1.0.0) or start it by hand from the Actions tab.
-# Builds the release APK. A tag push or manual run with a tag also publishes a GitHub pre-release.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Pre-release tag to publish (e.g. v1.0.0-pre); leave empty to verify the build only"
+        description: "Release tag (defaults to v<version from pubspec.yaml>, e.g. v1.0.0)"
         type: string
         required: false
+      build_only:
+        description: "Build without publishing (download the APK from this run instead)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+
+# Don't race two uploads to the same release or changes to the Latest designation.
+concurrency:
+  group: ${{ inputs.build_only && github.run_id || 'android-release' }}
+  cancel-in-progress: false
 
 jobs:
   android:
@@ -61,21 +68,24 @@ jobs:
 
       - run: flutter test
 
-      - name: Build release APK
-        run: flutter build apk --release --dart-define-from-file=firebase.env
+      - name: Build universal release APK
+        run: |
+          flutter build apk --release --dart-define-from-file=firebase.env
+          cp build/app/outputs/flutter-apk/app-release.apk build/latest.apk
 
-      - name: Publish as pre-release
-        if: github.event_name == 'push' || inputs.tag != ''
+      - name: Save build-only APK
+        if: inputs.build_only
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-apk
+          path: build/latest.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Publish latest.apk to the Latest release
+        if: ${{ !inputs.build_only }}
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
-        run: |
-          VERSION="$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}')"
-          cp build/app/outputs/flutter-apk/app-release.apk "smartbell-${TAG}.apk"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "smartbell-${TAG}.apk" --clobber
-          else
-            gh release create "$TAG" "smartbell-${TAG}.apk" --prerelease --target "$GITHUB_SHA" \
-              --title "SmartBell ${TAG} (pre-release)" \
-              --notes "Pre-release build (app version ${VERSION}) for testing. Signed with the debug key, so not for the Play Store. Install on Android: allow installing unknown apps, then open the APK."
-          fi
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+        run: ./tool/publish_apk.sh "$RELEASE_TAG"

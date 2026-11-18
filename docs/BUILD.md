@@ -19,17 +19,16 @@ Requirements: Flutter >= 3.27 (Dart >= 3.6), Android Studio (Android SDK), Xcode
 * iOS: set the bundle id `com.mozack.smartbell` and signing team in Xcode, then
   `flutter build ipa --dart-define-from-file=firebase.env` and upload with Xcode Organizer / Transporter.
 
-## GitHub pre-release (no GitHub Actions)
-`./tool/build_release.sh` analyses, tests, builds the release APK and publishes it as a **pre-release** (`v<version>-pre`)
-with the GitHub CLI. Run it where Flutter, the Android SDK and `gh auth login` are available (your computer or a Codespace).
-Bump `version:` in `pubspec.yaml` for each release. Use `--no-publish` to build only. The APK embeds the Firebase client keys
-and API URL from `firebase.env`, so publish it only from a repository you are comfortable sharing those with.
+## Publish the Android APK
+Open **Actions → Publish Android APK → Run workflow** and select the commit's branch. A normal run analyses, tests,
+then builds one universal `latest.apk` and attaches it to a regular GitHub release marked **Latest**. Leave the tag
+empty to use the app version (`1.0.0+1` → `v1.0.0`), enter a different `v`-prefixed tag, or trigger the workflow by
+pushing a `v*` tag. For a new version, bump `version:` first. A tag must point at the commit being built.
 
-## GitHub Actions pre-release (`.github/workflows/release.yml`)
-1. The workflow uses the hosted backend by default. To override it, set the `API_URL` repository secret under
-   Settings → Secrets and variables → Actions. `SCHOOL_SLUG`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`,
-   `FIREBASE_SENDER_ID` and `FIREBASE_APP_ID_ANDROID` are also optional.
-2. To check a fix **without publishing**, open Actions → *Build Android pre-release* → Run workflow, select the branch
-   containing the fix, and leave the tag empty. This runs analysis, tests and the release APK build. Re-running an old job uses its original commit.
-3. To publish the APK under Releases as a **pre-release**, supply the intended tag in the manual run, or push a `v*` tag.
-The APK is debug-signed (installable for testing). The secrets end up inside the APK as client configuration.
+* **Download:** [latest.apk](https://github.com/nozaqk/SmartBell-App/releases/latest/download/latest.apk). Rebuilding the same tag replaces that asset instead of adding another APK. Other releases are left alone. GitHub also shows automatic source archives; those are not APKs.
+* **Build without publishing:** check **Build without publishing** in the manual run. Download `latest-apk` under the run's **Artifacts** and unzip it to get `latest.apk` (retained for seven days).
+* **Configuration:** the hosted backend is used by default. Optional repository secrets: `API_URL`, `SCHOOL_SLUG`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`, `FIREBASE_SENDER_ID`, `FIREBASE_APP_ID_ANDROID`. These are client configuration embedded in the APK; do not supply server credentials. The CI APK is debug-signed for testing, not Play Store distribution.
+
+### Build locally instead
+With Flutter, JDK 17, the Android SDK and `firebase.env` available, run `./tool/build_release.sh --no-publish`
+to produce `build/latest.apk`. Omit `--no-publish` to publish it to this repository using the GitHub CLI (`gh auth login`).
