@@ -66,7 +66,19 @@ jobs:
       - name: Analyze (errors fail the build; style hints do not)
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - run: flutter test
+      - name: Run Flutter tests
+        id: tests
+        run: flutter test --file-reporter "json:$RUNNER_TEMP/flutter-tests.jsonl"
+
+      - name: Show failed test diagnostics in the check
+        if: failure() && steps.tests.outcome == 'failure'
+        run: |
+          jq -rs '
+            group_by(.testID)[] | select(any(.[]; .type == "error"))
+            | map(select(.type == "print" or .type == "error") | .message // .error)
+            | join("\n") | .[:5000] | gsub("%"; "%25") | gsub("\r"; "%0D") | gsub("\n"; "%0A")
+            | "::error title=Flutter test failure::" + .
+          ' "$RUNNER_TEMP/flutter-tests.jsonl"
 
       - name: Build universal release APK
         run: |

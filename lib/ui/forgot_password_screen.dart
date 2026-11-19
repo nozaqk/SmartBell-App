@@ -181,7 +181,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: _busy ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Text('Change password'),
           ),
           const SizedBox(height: 8),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Wrap(alignment: WrapAlignment.spaceBetween, spacing: 8, children: [
             TextButton(
               onPressed: _busy
                   ? null
