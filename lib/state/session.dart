@@ -45,11 +45,27 @@ class Session extends ChangeNotifier {
     required String fullName,
     required String phone,
     required String password,
+    required String department,
+    required StudyStream stream,
     String? email,
-    String? classGroupId,
   }) async {
-    await api.registerStudent(studentId: studentId.trim(), fullName: fullName.trim(), phone: phone.trim(), password: password, email: email?.trim(), classGroupId: classGroupId);
-    await _afterAuth();
+    await api.registerStudent(
+      studentId: studentId.trim(),
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      password: password,
+      department: department.trim(),
+      stream: stream,
+      email: email?.trim(),
+    );
+    // Registration already succeeded. A profile-load error should lead to sign-in,
+    // not back to a form that would try to create the same student a second time.
+    try {
+      await _afterAuth();
+    } on ApiException {
+      notice = 'Your account was created. Please sign in to continue.';
+      _reset();
+    }
   }
 
   Future<void> _afterAuth() async {
