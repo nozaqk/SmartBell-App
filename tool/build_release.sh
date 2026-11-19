@@ -13,9 +13,9 @@ fi
 if grep -q '^API_URL=.' firebase.env && ! grep -q '^API_URL=https://' firebase.env; then
   echo "WARNING: Use an HTTPS API_URL for release builds, or leave it empty to use the hosted backend."
 fi
-[ -d android ] || ./tool/setup_platforms.sh
+# Refresh native resources even when the platform projects already exist.
+./tool/setup_platforms.sh
 
-flutter pub get
 flutter analyze --no-fatal-infos --no-fatal-warnings
 flutter test
 flutter build apk --release --dart-define-from-file=firebase.env

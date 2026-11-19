@@ -32,7 +32,7 @@ They do not verify live account creation, SMS or push delivery on a device, or t
 
 ## Quick start
 ```bash
-./tool/setup_platforms.sh                 # once: generates android/ and ios/ and applies SmartBell settings
+./tool/setup_platforms.sh                 # scaffold platforms and apply the SmartBell icons/settings
 cp firebase.env.example firebase.env      # fill in
 flutter run --dart-define-from-file=firebase.env
 flutter analyze && flutter test
