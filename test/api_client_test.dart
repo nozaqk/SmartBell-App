@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:smartbell/config.dart';
 import 'package:smartbell/core/api_client.dart';
+import 'package:smartbell/core/models.dart';
 import 'package:smartbell/core/token_store.dart';
 
 http.Response json(Object body, [int status = 200]) => http.Response(jsonEncode(body), status, headers: {'content-type': 'application/json'});
@@ -119,19 +120,25 @@ void main() {
     );
   });
 
-  test('registerStudent posts only student fields, never a role, and signs the student in', () async {
+  test('registerStudent sends department and stream, not a class or role, and adopts the tokens', () async {
     Map<String, dynamic>? sent;
     final client = MockClient((req) async {
+      expect(req.method, 'POST');
       expect(req.url.path, '/api/v1/auth/register-student');
       expect(req.headers['Authorization'], isNull);
       sent = jsonDecode(req.body) as Map<String, dynamic>;
       return json({'accessToken': 'A5', 'refreshToken': 'R5', 'expiresIn': 900, 'user': {}}, 201);
     });
     final store = MemoryTokenStore();
-    final api = ApiClient(baseUrl: 'http://x', store: store, client: client);
-    await api.registerStudent(studentId: 'ECE/26/001', fullName: 'Yaw Owusu', phone: '024 123 4567', password: 'NewStudent#1', email: '', classGroupId: 'g1');
-    expect(sent, {'studentId': 'ECE/26/001', 'fullName': 'Yaw Owusu', 'phone': '024 123 4567', 'password': 'NewStudent#1', 'classGroupId': 'g1'});
-    expect(sent!.containsKey('role'), false);
+    final api = ApiClient(baseUrl: 'http://x', store: store, client: client, schoolSlug: 'demo');
+    await api.registerStudent(
+      studentId: 'ECE/26/001', fullName: 'Yaw Owusu', phone: '024 123 4567', password: 'NewStudent#1',
+      email: '', department: 'Electronics', stream: StudyStream.regular,
+    );
+    expect(sent, {
+      'studentId': 'ECE/26/001', 'fullName': 'Yaw Owusu', 'phone': '024 123 4567', 'password': 'NewStudent#1',
+      'department': 'Electronics', 'stream': 'Regular', 'schoolSlug': 'demo',
+    });
     expect(await store.readRefresh(), 'R5');
     expect(api.hasAccessToken, true);
   });
@@ -158,10 +165,7 @@ void main() {
         'school': {'name': 'Demo School', 'slug': 'demo'},
         'studentSelfRegistration': true,
         'passwordResetBySms': false,
-        'classGroups': [
-          {'id': 'g1', 'name': 'Level 200', 'level': 200, 'programme': 'BEng Electronics'},
-          {'id': 'g2', 'name': 'Level 300', 'level': null, 'programme': null},
-        ],
+        'departments': [' Electronics ', {'name': 'Mathematics'}, 'electronics', '', {'id': 42}],
       });
     });
     final api = ApiClient(baseUrl: 'http://x', store: MemoryTokenStore(), client: client, schoolSlug: 'demo');
@@ -169,6 +173,6 @@ void main() {
     expect(o.schoolName, 'Demo School');
     expect(o.studentSelfRegistration, true);
     expect(o.passwordResetBySms, false);
-    expect(o.classGroups.map((g) => g.label), ['Level 200 · BEng Electronics', 'Level 300']);
+    expect(o.departments, ['Electronics', 'Mathematics']);
   });
 }

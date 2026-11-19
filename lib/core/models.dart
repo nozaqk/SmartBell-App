@@ -72,12 +72,14 @@ class Profile {
     this.level,
     this.programme,
     this.department,
+    this.stream,
     this.classGroups = const [],
     this.courses = const [],
   });
 
   final String id, role, fullName, loginId, schoolName, timezone;
   final String? email, title, level, programme, department;
+  final StudyStream? stream;
   final List<String> classGroups; // students: groups they belong to
   final List<String> courses; // lecturers: "CODE - Name"
 
@@ -103,6 +105,7 @@ class Profile {
       level: s?['level'] == null ? null : _str(s!['level']),
       programme: s?['programme'] as String?,
       department: ((s ?? l)?['department']) as String?,
+      stream: StudyStream.tryParse(s?['stream']),
       classGroups: [for (final g in (s?['classGroups'] as List? ?? const [])) _str((g as Map)['name'])],
       courses: [for (final c in (l?['courses'] as List? ?? const [])) '${(c as Map)['code']} - ${c['name']}'],
     );
@@ -198,29 +201,49 @@ class ClassGroupRef {
   factory ClassGroupRef.fromJson(Map<String, dynamic> j) => ClassGroupRef(_str(j['id']), _str(j['name']));
 }
 
-class ClassGroupOption {
-  ClassGroupOption({required this.id, required this.name, this.level, this.programme});
-  final String id, name;
-  final int? level;
-  final String? programme;
+enum StudyStream {
+  regular('Regular'),
+  weekend('Weekend'),
+  evening('Evening');
 
-  String get label => programme == null || programme!.isEmpty ? name : '$name · $programme';
+  const StudyStream(this.label);
+  final String label;
 
-  factory ClassGroupOption.fromJson(Map<String, dynamic> j) =>
-      ClassGroupOption(id: _str(j['id']), name: _str(j['name']), level: j['level'] == null ? null : _int(j['level']), programme: j['programme'] as String?);
+  static StudyStream? tryParse(Object? value) {
+    if (value is! String) return null;
+    final name = value.trim().toLowerCase();
+    for (final stream in values) {
+      if (stream.name == name) return stream;
+    }
+    return null;
+  }
 }
 
-/// GET /auth/options: what the sign-up and forgot-password screens need before anyone is signed in.
+/// Public school options needed before sign-in. Older servers may not list departments.
 class AuthOptions {
-  AuthOptions({required this.schoolName, required this.studentSelfRegistration, required this.passwordResetBySms, required this.classGroups});
+  AuthOptions({required this.schoolName, required this.studentSelfRegistration, required this.passwordResetBySms, required this.departments});
   final String schoolName;
   final bool studentSelfRegistration, passwordResetBySms;
-  final List<ClassGroupOption> classGroups;
+  final List<String> departments;
 
   factory AuthOptions.fromJson(Map<String, dynamic> j) => AuthOptions(
         schoolName: _str((j['school'] as Map?)?['name']),
         studentSelfRegistration: j['studentSelfRegistration'] == true,
         passwordResetBySms: j['passwordResetBySms'] == true,
-        classGroups: [for (final g in (j['classGroups'] as List? ?? const [])) ClassGroupOption.fromJson((g as Map).cast<String, dynamic>())],
+        departments: _departmentNames(j['departments']),
       );
+
+  static List<String> _departmentNames(Object? raw) {
+    final names = <String>[];
+    final seen = <String>{};
+    if (raw is List) {
+      for (final item in raw) {
+        final name = item is Map ? item['name'] : item;
+        if (name is! String) continue;
+        final trimmed = name.trim();
+        if (trimmed.isNotEmpty && seen.add(trimmed.toLowerCase())) names.add(trimmed);
+      }
+    }
+    return names;
+  }
 }

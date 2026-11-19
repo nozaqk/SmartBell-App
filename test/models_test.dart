@@ -21,7 +21,7 @@ void main() {
       'profile': {
         'id': 'u1', 'role': 'STUDENT', 'fullName': 'Ama Boateng', 'loginId': 'S-001', 'email': null,
         'school': {'name': 'Demo School', 'timezone': 'Africa/Accra', 'logoUrl': null},
-        'student': {'level': 200, 'programme': 'BEng Electronics', 'department': 'Electronics', 'classGroups': [{'id': 'g1', 'name': 'Level 200'}]},
+        'student': {'level': 200, 'programme': 'BEng Electronics', 'department': 'Electronics', 'stream': 'WEEKEND', 'classGroups': [{'id': 'g1', 'name': 'Level 200'}]},
       },
       'nextClass': {...entry, 'date': '2026-11-09', 'dayOffset': 1, 'countdownSeconds': 3600},
       'today': [entry],
@@ -33,6 +33,8 @@ void main() {
       'canPublishAnnouncements': false,
     });
     expect(d.profile.isStudent, true);
+    expect(d.profile.department, 'Electronics');
+    expect(d.profile.stream?.label, 'Weekend');
     expect(d.profile.classGroups, ['Level 200']);
     expect(d.profile.level, '200');
     expect(d.nextClass!.dayOffset, 1);
@@ -53,6 +55,13 @@ void main() {
     expect(p.isLecturer, true);
     expect(p.displayName, 'Mr. Kwame Mensah');
     expect(p.courses, ['ECE 204 - Mathematics']);
+  });
+
+  test('older options and profiles need not include departments or streams', () {
+    final options = AuthOptions.fromJson({'classGroups': [{'name': 'Level 200', 'programme': 'BEng Electronics'}]});
+    expect(options.departments, isEmpty); // A class or programme is not a department.
+    expect(Profile.fromJson({'student': {}}).stream, isNull);
+    expect(StudyStream.tryParse('unknown'), isNull);
   });
 
   test('A null nextClass is handled', () {

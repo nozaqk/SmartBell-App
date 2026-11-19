@@ -51,7 +51,7 @@ class ApiClient {
     return j;
   }
 
-  /// Public data for the sign-up form: class groups, and whether sign-up and SMS password reset are available.
+  /// Public department suggestions and availability of student sign-up and SMS reset.
   Future<AuthOptions> authOptions() async {
     final res = await _send('GET', '/auth/options', query: {if (schoolSlug.isNotEmpty) 'schoolSlug': schoolSlug}, auth: false);
     return AuthOptions.fromJson((res as Map).cast<String, dynamic>());
@@ -63,16 +63,18 @@ class ApiClient {
     required String fullName,
     required String phone,
     required String password,
+    required String department,
+    required StudyStream stream,
     String? email,
-    String? classGroupId,
   }) async {
     final res = await _send('POST', '/auth/register-student', body: {
       'studentId': studentId,
       'fullName': fullName,
       'phone': phone,
       'password': password,
+      'department': department,
+      'stream': stream.label,
       if (email != null && email.isNotEmpty) 'email': email,
-      if (classGroupId != null) 'classGroupId': classGroupId,
       if (schoolSlug.isNotEmpty) 'schoolSlug': schoolSlug,
     }, auth: false);
     return _adoptTokens(res as Map<String, dynamic>);

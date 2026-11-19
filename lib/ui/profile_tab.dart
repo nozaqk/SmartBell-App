@@ -34,6 +34,7 @@ class ProfileTab extends StatelessWidget {
           row(Icons.school_outlined, 'School', p.schoolName),
           row(Icons.apartment_outlined, 'Department', p.department),
           if (p.isStudent) ...[
+            row(Icons.schedule_outlined, 'Stream', p.stream?.label),
             row(Icons.menu_book_outlined, 'Programme', p.programme),
             row(Icons.stairs_outlined, 'Level', p.level),
             row(Icons.groups_outlined, 'Class groups', p.classGroups.join(', ')),
