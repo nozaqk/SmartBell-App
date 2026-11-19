@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'models.dart';
 import 'token_store.dart';
 
 class ApiException implements Exception {
@@ -33,16 +34,66 @@ class ApiClient {
 
   Uri _uri(String path, [Map<String, String>? q]) => Uri.parse('$baseUrl/api/v1$path').replace(queryParameters: q == null || q.isEmpty ? null : q);
 
-  Future<Map<String, dynamic>> login(String loginId, String password) async {
+  /// [audience] is the role tab chosen on the login screen: 'student' or 'staff'. The server rejects a mismatch.
+  Future<Map<String, dynamic>> login(String loginId, String password, {String? audience}) async {
     final res = await _send('POST', '/auth/login', body: {
       'loginId': loginId,
       'password': password,
+      if (audience != null) 'audience': audience,
       if (schoolSlug.isNotEmpty) 'schoolSlug': schoolSlug,
     }, auth: false);
-    final j = res as Map<String, dynamic>;
+    return _adoptTokens(res as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> _adoptTokens(Map<String, dynamic> j) async {
     _access = j['accessToken'] as String;
     await store.writeRefresh(j['refreshToken'] as String);
     return j;
+  }
+
+  /// Public data for the sign-up form: class groups, and whether sign-up and SMS password reset are available.
+  Future<AuthOptions> authOptions() async {
+    final res = await _send('GET', '/auth/options', query: {if (schoolSlug.isNotEmpty) 'schoolSlug': schoolSlug}, auth: false);
+    return AuthOptions.fromJson((res as Map).cast<String, dynamic>());
+  }
+
+  /// Student self-registration (staff accounts are created by the administrator). Signs the new student in.
+  Future<Map<String, dynamic>> registerStudent({
+    required String studentId,
+    required String fullName,
+    required String phone,
+    required String password,
+    String? email,
+    String? classGroupId,
+  }) async {
+    final res = await _send('POST', '/auth/register-student', body: {
+      'studentId': studentId,
+      'fullName': fullName,
+      'phone': phone,
+      'password': password,
+      if (email != null && email.isNotEmpty) 'email': email,
+      if (classGroupId != null) 'classGroupId': classGroupId,
+      if (schoolSlug.isNotEmpty) 'schoolSlug': schoolSlug,
+    }, auth: false);
+    return _adoptTokens(res as Map<String, dynamic>);
+  }
+
+  /// Asks the server to SMS a 6-digit code. The answer is the same whether or not the ID exists.
+  Future<String> forgotPassword(String loginId) async {
+    final res = await _send('POST', '/auth/forgot-password', body: {
+      'loginId': loginId,
+      if (schoolSlug.isNotEmpty) 'schoolSlug': schoolSlug,
+    }, auth: false);
+    return (res is Map ? res['message'] as String? : null) ?? 'If this ID has a phone number on file, a reset code has been sent by SMS.';
+  }
+
+  Future<void> resetPassword({required String loginId, required String code, required String newPassword}) async {
+    await _send('POST', '/auth/reset-password', body: {
+      'loginId': loginId,
+      'code': code,
+      'newPassword': newPassword,
+      if (schoolSlug.isNotEmpty) 'schoolSlug': schoolSlug,
+    }, auth: false);
   }
 
   /// Restores a session from the stored refresh token. Returns false when there is none or it was rejected.

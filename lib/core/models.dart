@@ -197,3 +197,30 @@ class ClassGroupRef {
   final String id, name;
   factory ClassGroupRef.fromJson(Map<String, dynamic> j) => ClassGroupRef(_str(j['id']), _str(j['name']));
 }
+
+class ClassGroupOption {
+  ClassGroupOption({required this.id, required this.name, this.level, this.programme});
+  final String id, name;
+  final int? level;
+  final String? programme;
+
+  String get label => programme == null || programme!.isEmpty ? name : '$name · $programme';
+
+  factory ClassGroupOption.fromJson(Map<String, dynamic> j) =>
+      ClassGroupOption(id: _str(j['id']), name: _str(j['name']), level: j['level'] == null ? null : _int(j['level']), programme: j['programme'] as String?);
+}
+
+/// GET /auth/options: what the sign-up and forgot-password screens need before anyone is signed in.
+class AuthOptions {
+  AuthOptions({required this.schoolName, required this.studentSelfRegistration, required this.passwordResetBySms, required this.classGroups});
+  final String schoolName;
+  final bool studentSelfRegistration, passwordResetBySms;
+  final List<ClassGroupOption> classGroups;
+
+  factory AuthOptions.fromJson(Map<String, dynamic> j) => AuthOptions(
+        schoolName: _str((j['school'] as Map?)?['name']),
+        studentSelfRegistration: j['studentSelfRegistration'] == true,
+        passwordResetBySms: j['passwordResetBySms'] == true,
+        classGroups: [for (final g in (j['classGroups'] as List? ?? const [])) ClassGroupOption.fromJson((g as Map).cast<String, dynamic>())],
+      );
+}

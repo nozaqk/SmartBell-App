@@ -33,14 +33,38 @@ class Session extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signIn(String loginId, String password) async {
-    await api.login(loginId.trim(), password);
+  /// [audience] is 'student' or 'staff' (the tab chosen on the login screen).
+  Future<void> signIn(String loginId, String password, {String? audience}) async {
+    await api.login(loginId.trim(), password, audience: audience);
+    await _afterAuth();
+  }
+
+  /// Student self-registration: creates the account, then signs in exactly like [signIn].
+  Future<void> registerStudent({
+    required String studentId,
+    required String fullName,
+    required String phone,
+    required String password,
+    String? email,
+    String? classGroupId,
+  }) async {
+    await api.registerStudent(studentId: studentId.trim(), fullName: fullName.trim(), phone: phone.trim(), password: password, email: email?.trim(), classGroupId: classGroupId);
+    await _afterAuth();
+  }
+
+  Future<void> _afterAuth() async {
     try {
       await _loadProfile();
     } on ApiException {
       await api.logout();
       rethrow;
     }
+  }
+
+  /// A message shown once on the login screen (e.g. after a password reset).
+  void setNotice(String message) {
+    notice = message;
+    notifyListeners();
   }
 
   Future<void> _loadProfile() async {

@@ -98,4 +98,77 @@ void main() {
     expect(jsonDecode(sent!), {'refreshToken': 'R1', 'pushToken': 'FCM_TOKEN'});
     expect(await store.readRefresh(), isNull);
   });
+
+  test('login sends the chosen role tab as audience', () async {
+    Map<String, dynamic>? sent;
+    final client = MockClient((req) async {
+      sent = jsonDecode(req.body) as Map<String, dynamic>;
+      return json({'accessToken': 'A1', 'refreshToken': 'R1', 'expiresIn': 900, 'user': {}});
+    });
+    final api = ApiClient(baseUrl: 'http://x', store: MemoryTokenStore(), client: client, schoolSlug: 'demo');
+    await api.login('L-001', 'pw', audience: 'staff');
+    expect(sent, {'loginId': 'L-001', 'password': 'pw', 'audience': 'staff', 'schoolSlug': 'demo'});
+  });
+
+  test('a role mismatch from the server surfaces its message', () async {
+    final client = MockClient((req) async => json({'error': 'forbidden', 'message': 'This is a student account. Choose "Student" above and sign in again.'}, 403));
+    final api = ApiClient(baseUrl: 'http://x', store: MemoryTokenStore(), client: client);
+    expect(
+      () => api.login('S-001', 'pw', audience: 'staff'),
+      throwsA(isA<ApiException>().having((e) => e.message, 'message', contains('student account')).having((e) => e.status, 'status', 403)),
+    );
+  });
+
+  test('registerStudent posts only student fields, never a role, and signs the student in', () async {
+    Map<String, dynamic>? sent;
+    final client = MockClient((req) async {
+      expect(req.url.path, '/api/v1/auth/register-student');
+      expect(req.headers['Authorization'], isNull);
+      sent = jsonDecode(req.body) as Map<String, dynamic>;
+      return json({'accessToken': 'A5', 'refreshToken': 'R5', 'expiresIn': 900, 'user': {}}, 201);
+    });
+    final store = MemoryTokenStore();
+    final api = ApiClient(baseUrl: 'http://x', store: store, client: client);
+    await api.registerStudent(studentId: 'ECE/26/001', fullName: 'Yaw Owusu', phone: '024 123 4567', password: 'NewStudent#1', email: '', classGroupId: 'g1');
+    expect(sent, {'studentId': 'ECE/26/001', 'fullName': 'Yaw Owusu', 'phone': '024 123 4567', 'password': 'NewStudent#1', 'classGroupId': 'g1'});
+    expect(sent!.containsKey('role'), false);
+    expect(await store.readRefresh(), 'R5');
+    expect(api.hasAccessToken, true);
+  });
+
+  test('forgot and reset password call the public endpoints', () async {
+    final seen = <String>[];
+    final client = MockClient((req) async {
+      seen.add('${req.method} ${req.url.path} ${req.body}');
+      if (req.url.path.endsWith('/forgot-password')) return json({'message': 'sent'});
+      return http.Response('', 204);
+    });
+    final api = ApiClient(baseUrl: 'http://x', store: MemoryTokenStore(), client: client);
+    expect(await api.forgotPassword('S-001'), 'sent');
+    await api.resetPassword(loginId: 'S-001', code: '123456', newPassword: 'Brand#New1');
+    expect(seen[0], 'POST /api/v1/auth/forgot-password {"loginId":"S-001"}');
+    expect(jsonDecode(seen[1].split(' ').sublist(2).join(' ')), {'loginId': 'S-001', 'code': '123456', 'newPassword': 'Brand#New1'});
+  });
+
+  test('authOptions reads the sign-up form data', () async {
+    final client = MockClient((req) async {
+      expect(req.url.path, '/api/v1/auth/options');
+      expect(req.url.queryParameters['schoolSlug'], 'demo');
+      return json({
+        'school': {'name': 'Demo School', 'slug': 'demo'},
+        'studentSelfRegistration': true,
+        'passwordResetBySms': false,
+        'classGroups': [
+          {'id': 'g1', 'name': 'Level 200', 'level': 200, 'programme': 'BEng Electronics'},
+          {'id': 'g2', 'name': 'Level 300', 'level': null, 'programme': null},
+        ],
+      });
+    });
+    final api = ApiClient(baseUrl: 'http://x', store: MemoryTokenStore(), client: client, schoolSlug: 'demo');
+    final o = await api.authOptions();
+    expect(o.schoolName, 'Demo School');
+    expect(o.studentSelfRegistration, true);
+    expect(o.passwordResetBySms, false);
+    expect(o.classGroups.map((g) => g.label), ['Level 200 · BEng Electronics', 'Level 300']);
+  });
 }

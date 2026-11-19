@@ -20,9 +20,16 @@ Push (FCM → APNs on iOS): foreground, background and terminated handling, tap-
 (`route` in the push data), token registration after sign-in, token refresh, token removal on sign-out.
 Tokens: refresh token in Keychain / EncryptedSharedPreferences, access token in memory only, automatic rotation on 401.
 
+## Signing in and accounts
+* The login screen has a **Student / Staff** selector. The choice is sent to the server, which rejects an ID used on the wrong tab (after the password is verified).
+* **Create a student account** is available on the Student tab only (`lib/ui/register_screen.dart`). Staff accounts are created by administrators on the web dashboard; the sign-up endpoint cannot create anything but students. A school can switch sign-up off (school setting `studentSelfRegistration: false`).
+* **Forgot password** (`lib/ui/forgot_password_screen.dart`) texts a 6-digit code to the phone number on the account and then sets the new password. It needs the backend's `SMS_PROVIDER` configured; otherwise the screen tells the user to ask the administrator.
+
 ## Verification
 The Android workflow runs `flutter analyze`, `flutter test` and a release APK build. The API tests use a mock HTTP
 client; a passing build does not verify sign-in against the live backend, push delivery on a device, or the iOS build.
+The sign-up, role-selector and forgot-password screens were added without a Flutter SDK available, so they are only
+verified once that workflow passes and they have been tried on a device.
 
 ## Quick start
 ```bash

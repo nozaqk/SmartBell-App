@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../core/api_client.dart';
 import '../state/session.dart';
+import 'forgot_password_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +17,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _pw = TextEditingController();
   final _form = GlobalKey<FormState>();
   bool _busy = false, _hide = true;
+  String _role = 'student'; // 'student' | 'staff': sent to the server, which rejects a mismatch
   String? _error;
+
+  bool get _isStudent => _role == 'student';
 
   @override
   void dispose() {
@@ -31,13 +36,17 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      await context.read<Session>().signIn(_id.text, _pw.text);
+      await context.read<Session>().signIn(_id.text, _pw.text, audience: _role);
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  void _forgot() => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ForgotPasswordScreen(initialId: _id.text.trim())));
+
+  void _register() => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RegisterScreen()));
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +73,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   Text('SmartBell', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 4),
-                  Text('Sign in with your student ID or staff ID', textAlign: TextAlign.center, style: TextStyle(color: c.onSurfaceVariant)),
-                  const SizedBox(height: 28),
+                  Text('Choose how you sign in', textAlign: TextAlign.center, style: TextStyle(color: c.onSurfaceVariant)),
+                  const SizedBox(height: 20),
+                  SegmentedButton<String>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment<String>(value: 'student', label: Text('Student'), icon: Icon(Icons.school_outlined)),
+                      ButtonSegment<String>(value: 'staff', label: Text('Staff'), icon: Icon(Icons.badge_outlined)),
+                    ],
+                    selected: {_role},
+                    onSelectionChanged: _busy
+                        ? null
+                        : (s) => setState(() {
+                              _role = s.first;
+                              _error = null;
+                            }),
+                  ),
+                  const SizedBox(height: 20),
                   if (notice != null && _error == null) _banner(c, notice, c.secondaryContainer, c.onSecondaryContainer),
                   if (_error != null) _banner(c, _error!, c.errorContainer, c.onErrorContainer),
                   TextFormField(
@@ -74,8 +98,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     autocorrect: false,
                     enableSuggestions: false,
                     autofillHints: const [AutofillHints.username],
-                    decoration: const InputDecoration(labelText: 'Student ID or staff ID', prefixIcon: Icon(Icons.badge_outlined)),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter your ID' : null,
+                    decoration: InputDecoration(labelText: _isStudent ? 'Student ID' : 'Staff ID', prefixIcon: const Icon(Icons.badge_outlined)),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? (_isStudent ? 'Enter your student ID' : 'Enter your staff ID') : null,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
@@ -90,13 +114,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (v) => (v == null || v.isEmpty) ? 'Enter your password' : null,
                   ),
-                  const SizedBox(height: 22),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(onPressed: _busy ? null : _forgot, child: const Text('Forgot password?')),
+                  ),
+                  const SizedBox(height: 6),
                   FilledButton(
                     onPressed: _busy ? null : _submit,
                     child: _busy ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Text('Sign in'),
                   ),
-                  const SizedBox(height: 16),
-                  Text('Forgot your password? Ask the school administrator to reset it.', textAlign: TextAlign.center, style: TextStyle(color: c.outline, fontSize: 12)),
+                  const SizedBox(height: 18),
+                  if (_isStudent) ...[
+                    Row(children: [
+                      const Expanded(child: Divider()),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text('New here?', style: TextStyle(color: c.outline, fontSize: 12))),
+                      const Expanded(child: Divider()),
+                    ]),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(onPressed: _busy ? null : _register, icon: const Icon(Icons.person_add_alt_1_outlined), label: const Text('Create a student account')),
+                  ] else
+                    Text('Staff accounts are created by the school administrator. Ask them if you cannot sign in.', textAlign: TextAlign.center, style: TextStyle(color: c.outline, fontSize: 12)),
                 ]),
               ),
             ),
