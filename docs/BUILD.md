@@ -25,8 +25,8 @@ then builds one universal `latest.apk` and attaches it to a regular GitHub relea
 empty to use the app version (`1.0.0+1` → `v1.0.0`), enter a different `v`-prefixed tag, or trigger the workflow by
 pushing a `v*` tag. For a new version, bump `version:` first. A tag must point at the commit being built.
 
-* **Download:** [latest.apk](https://github.com/nozaqk/SmartBell-App/releases/latest/download/latest.apk). Rebuilding the same tag replaces that asset instead of adding another APK. Other releases are left alone. GitHub also shows automatic source archives; those are not APKs.
-* **Build without publishing:** check **Build without publishing** in the manual run. Download `latest-apk` under the run's **Artifacts** and unzip it to get `latest.apk` (retained for seven days).
+* **Download:** [latest.apk](https://github.com/nozaqk/SmartBell-App/releases/latest/download/latest.apk) is the only APK kept across published GitHub releases. After a successful publish, the script checks that the new tag is **Latest** and its APK finished uploading, then removes the other `.apk` assets. Older release notes, tags, non-APK assets and unpublished drafts are preserved. GitHub's automatic ZIP and TAR.GZ source archives are not APKs.
+* **Build without publishing:** check **Build without publishing** in the manual run. Use this for superseded versions rather than promoting them back to Latest. Download `latest-apk` under the run's **Artifacts** and unzip it to get `latest.apk` (retained for seven days).
 * **Configuration:** the hosted backend is used by default. Optional repository secrets: `API_URL`, `SCHOOL_SLUG`, `FIREBASE_API_KEY`, `FIREBASE_PROJECT_ID`, `FIREBASE_SENDER_ID`, `FIREBASE_APP_ID_ANDROID`. These are client configuration embedded in the APK; do not supply server credentials. The CI APK is debug-signed for testing, not Play Store distribution.
 
 ### Build locally instead

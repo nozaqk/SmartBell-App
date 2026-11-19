@@ -21,15 +21,20 @@ if [[ -n "$tag_commit" && "$tag_commit" != "$commit" ]]; then
 fi
 
 title="SmartBell $tag"
-if gh release view "$tag" >/dev/null 2>&1; then
+if published=$(gh release view "$tag" --json isDraft,isPrerelease --jq '(.isDraft or .isPrerelease) | not' 2>/dev/null); then
+  if [[ "$published" == true ]]; then
+    latest_tag=$(gh api 'repos/{owner}/{repo}/releases/latest' --jq '.tag_name')
+    if [[ "$latest_tag" != "$tag" ]]; then
+      echo "$tag is superseded by $latest_tag. Use a build-only run for an older release." >&2
+      exit 1
+    fi
+  fi
   gh release upload "$tag" "$apk" --clobber
-  # Migrate older APK filenames on this release only, after the replacement was uploaded.
-  old_apks=$(gh release view "$tag" --json assets --jq '.assets[].name | select(. != "latest.apk" and (ascii_downcase | endswith(".apk")))')
-  while IFS= read -r name; do
-    [[ -z "$name" ]] || gh release delete-asset "$tag" --yes -- "$name"
-  done <<< "$old_apks"
   gh release edit "$tag" --title "$title" --draft=false --prerelease=false --latest
 else
   gh release create "$tag" "$apk" --target "$commit" --title "$title" --latest \
     --notes "Download latest.apk to install SmartBell $version on Android. This is a universal APK for sideloading. GitHub Actions builds are debug-signed for testing, not for the Play Store."
 fi
+
+# Only retire older downloads after the new release and upload have succeeded.
+python3 tool/prune_release_apks.py "$tag"
