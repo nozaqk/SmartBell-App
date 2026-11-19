@@ -1,7 +1,7 @@
 # SmartBell mobile app
 
 **Android download:** [latest.apk](https://github.com/nozaqk/SmartBell-App/releases/latest/download/latest.apk) · [Release notes](https://github.com/nozaqk/SmartBell-App/releases/latest).
-One universal APK for sideload testing; not a Play Store build.
+Only the Latest release keeps an APK: one universal build for sideload testing, not for the Play Store.
 
 One Flutter app (Android + iOS) for **students and lecturers**. After sign-in the backend returns the user's role
 and the app shows the matching experience; the backend enforces permissions on every request
