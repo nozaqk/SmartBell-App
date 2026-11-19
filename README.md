@@ -26,10 +26,9 @@ Tokens: refresh token in Keychain / EncryptedSharedPreferences, access token in 
 * **Forgot password** (`lib/ui/forgot_password_screen.dart`) texts a 6-digit code to the phone number on the account and then sets the new password. It needs the backend's `SMS_PROVIDER` configured; otherwise the screen tells the user to ask the administrator.
 
 ## Verification
-The Android workflow runs `flutter analyze`, `flutter test` and a release APK build. The API tests use a mock HTTP
-client; a passing build does not verify sign-in against the live backend, push delivery on a device, or the iOS build.
-The sign-up, role-selector and forgot-password screens were added without a Flutter SDK available, so they are only
-verified once that workflow passes and they have been tried on a device.
+The Android workflow runs `flutter analyze`, `flutter test` and a release APK build. The API and widget tests use a
+mock HTTP client to check role selection, access to the student sign-up form and the two-step password reset flow.
+They do not verify live account creation, SMS or push delivery on a device, or the iOS build.
 
 ## Quick start
 ```bash
