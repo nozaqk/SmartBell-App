@@ -57,7 +57,9 @@ void main() {
     expect(find.text('Create account'), findsOneWidget);
   });
 
-  testWidgets('password reset carries the login ID into the SMS flow and returns to sign-in', (tester) async {
+  testWidgets('password reset carries the ID through the SMS flow on a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(360, 720));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await _openLogin(tester);
     await tester.enterText(find.byType(TextFormField).first, 'S-001');
     await _tap(tester, 'Forgot password?');
