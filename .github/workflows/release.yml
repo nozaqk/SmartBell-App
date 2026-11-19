@@ -61,10 +61,11 @@ jobs:
             echo "FIREBASE_IOS_BUNDLE_ID=com.mozack.smartbell"
           } > firebase.env
 
-      - name: Generate Android project and apply SmartBell settings
+      - name: Prepare native projects and generate SmartBell icons
         run: ./tool/setup_platforms.sh
 
-      - run: flutter pub get
+      - name: Verify generated Android and iOS icon resources
+        run: python3 -B -m unittest discover -s test -p 'test_app_icons.py'
 
       - name: Analyze (errors fail the build; style hints do not)
         run: flutter analyze --no-fatal-infos --no-fatal-warnings

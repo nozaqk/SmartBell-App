@@ -63,11 +63,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 key: _form,
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                   Center(
-                    child: Container(
+                    child: Image.asset(
+                      'assets/branding/app-icon-rounded.png',
                       width: 72,
                       height: 72,
-                      decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(20)),
-                      child: Icon(Icons.notifications_active, color: c.onPrimary, size: 38),
+                      excludeFromSemantics: true, // The app name follows immediately below.
                     ),
                   ),
                   const SizedBox(height: 16),

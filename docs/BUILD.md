@@ -2,15 +2,22 @@
 
 Requirements: Flutter >= 3.27 (Dart >= 3.6), Android Studio (Android SDK), Xcode 15+ for iOS (macOS only).
 
-1. `./tool/setup_platforms.sh` — runs `flutter create --platforms=android,ios --org com.mozack --project-name smartbell .`
-   (keeps `lib/` and `pubspec.yaml`), adds the INTERNET / POST_NOTIFICATIONS permissions, the FCM default channel
-   `smartbell_bells` and the iOS `remote-notification` background mode.
+1. `./tool/setup_platforms.sh` scaffolds missing Android/iOS projects, generates their launcher icons and reapplies
+   the INTERNET / POST_NOTIFICATIONS permissions, the FCM default icon and channel `smartbell_bells`, and the iOS
+   `remote-notification` background mode. Rerun it after pulling a branding change, even in an existing checkout.
 2. Android: `setup_platforms.sh` sets `minSdk = 23` and core library desugaring (needed by flutter_local_notifications); check the diff of `android/app/build.gradle(.kts)`.
 3. Configuration is passed at build time (no secrets in the repo):
    `--dart-define-from-file=firebase.env` (see `firebase.env.example`). An omitted or empty `API_URL` uses
    `https://smartbell-backend.onrender.com`. To override it, use an HTTPS origin without `/api/v1` or a trailing slash.
    For local development on an Android emulator, use `API_URL=http://10.0.2.2:3000` to reach a backend on your computer.
 4. Run / test: `flutter run --dart-define-from-file=firebase.env`, `flutter analyze`, `flutter test`.
+
+## App icon
+`assets/branding/supplied-icon.png` is the original artwork. The build uses an opaque, full-bleed version for iOS,
+where the system applies the corner mask, and a rounded version for legacy Android and the sign-in screen.
+Modern Android uses the transparent white bell over the artwork's teal (`#016A63`); themed icons and notification
+small icons use the bell silhouette. `dart run flutter_launcher_icons` generates the native sizes from the inputs
+in `pubspec.yaml`. Platform setup, local release builds and CI run it automatically; don't edit generated icons by hand.
 
 ## Release
 * Android: create a keystore, put its details in `android/key.properties` (git-ignored), configure signing in

@@ -57,7 +57,8 @@ class PushService {
 
     await _local.initialize(
       const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        // Android small icons use the bell's alpha mask, not the full adaptive launcher tile.
+        android: AndroidInitializationSettings('ic_launcher_foreground'),
         iOS: DarwinInitializationSettings(requestAlertPermission: false, requestBadgePermission: false, requestSoundPermission: false),
       ),
       onDidReceiveNotificationResponse: (r) => nav.routeFromPush(r.payload, ready: isSignedIn()),

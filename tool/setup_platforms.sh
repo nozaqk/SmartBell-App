@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-# One-time: generate the Android and iOS projects around the existing lib/ and pubspec.yaml,
-# then apply the SmartBell-specific native settings. Safe to re-run.
+# Scaffold missing Android/iOS projects, then refresh the SmartBell icons and native settings.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 command -v flutter >/dev/null || { echo "Flutter SDK (>= 3.27) is required: https://docs.flutter.dev/get-started/install"; exit 1; }
 
-flutter create --platforms=android,ios --org com.mozack --project-name smartbell .
-# Flutter creates a sample widget test when the project has no widget_test.dart.
-# It targets the generated template rather than SmartBell and must not enter CI.
-rm -f test/widget_test.dart
+if [[ ! -f android/app/src/main/AndroidManifest.xml || ! -f ios/Runner.xcodeproj/project.pbxproj ]]; then
+    # Remove only a sample test created by this invocation, never an existing test.
+    new_widget_test=false
+    [[ -e test/widget_test.dart ]] || new_widget_test=true
+    flutter create --platforms=android,ios --org com.mozack --project-name smartbell .
+    if [[ "$new_widget_test" == true ]]; then rm -f test/widget_test.dart; fi
+fi
 flutter pub get
+dart run flutter_launcher_icons
 
 python3 - <<'PY'
 import re, pathlib
@@ -22,6 +25,8 @@ if "POST_NOTIFICATIONS" not in s:
     s = s.replace("<application", '<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <application', 1)
 if "default_notification_channel_id" not in s:
     s = s.replace("</application>", '    <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="smartbell_bells"/>\n    </application>', 1)
+if "com.google.firebase.messaging.default_notification_icon" not in s:
+    s = s.replace("</application>", '    <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_launcher_foreground"/>\n    </application>', 1)
 s = s.replace('android:label="smartbell"', 'android:label="SmartBell"')
 m.write_text(s)
 
