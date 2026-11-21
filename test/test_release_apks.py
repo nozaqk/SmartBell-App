@@ -1,8 +1,21 @@
 import json
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from tool import prune_release_apks as retention
+
+
+class ReleaseVersionTest(unittest.TestCase):
+    def test_publish_version_targets_a_new_release_tag(self):
+        pubspec = Path(__file__).resolve().parents[1] / "pubspec.yaml"
+        version = next(
+            line.split(":", 1)[1].strip()
+            for line in pubspec.read_text(encoding="utf-8").splitlines()
+            if line.startswith("version:")
+        )
+        release_tag = f"v{version.split('+', 1)[0]}"
+        self.assertEqual(release_tag, "v1.1.1")
 
 
 class RetentionTest(unittest.TestCase):
