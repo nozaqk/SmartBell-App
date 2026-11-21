@@ -5,6 +5,7 @@ import '../core/api_client.dart';
 import '../state/data_store.dart';
 import '../state/nav_state.dart';
 import 'announcements_screen.dart';
+import 'my_classes_screen.dart';
 import 'widgets.dart';
 
 class NotificationsTab extends StatelessWidget {
@@ -42,6 +43,8 @@ class NotificationsTab extends StatelessWidget {
                 data.markRead(n);
                 if (n.route == 'timetable') {
                   context.read<NavState>().select(NavState.tabTimetable);
+                } else if (n.route == 'classes') {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyClassesScreen()));
                 } else if (n.route == 'announcements') {
                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AnnouncementsScreen()));
                 }

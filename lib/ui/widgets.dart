@@ -190,6 +190,8 @@ IconData notificationIcon(String type) {
       return Icons.meeting_room_outlined;
     case 'SUBSTITUTION':
       return Icons.swap_horiz;
+    case 'CLASS_RESCHEDULED':
+      return Icons.edit_calendar_outlined;
     case 'TIMETABLE_CHANGE':
       return Icons.edit_calendar_outlined;
     case 'ANNOUNCEMENT':

@@ -6,6 +6,7 @@ import '../state/nav_state.dart';
 import '../state/session.dart';
 import 'announcements_screen.dart';
 import 'home_tab.dart';
+import 'my_classes_screen.dart';
 import 'notifications_tab.dart';
 import 'profile_tab.dart';
 import 'timetable_tab.dart';
@@ -55,6 +56,15 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AnnouncementsScreen()));
       });
+    }
+
+    if (nav.openClasses) {
+      nav.classesOpened();
+      if (isLecturer) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyClassesScreen()));
+        });
+      }
     }
 
     const pages = [HomeTab(), TimetableTab(), NotificationsTab(), ProfileTab()];

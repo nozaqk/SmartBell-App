@@ -7,10 +7,13 @@ import 'models.dart';
 import 'token_store.dart';
 
 class ApiException implements Exception {
-  ApiException(this.status, this.message, {this.code});
+  ApiException(this.status, this.message, {this.code, this.details});
   final int status;
   final String message;
   final String? code;
+
+  /// The server's `details` field: validation problems or, for a 409 clash, `{conflicts: [...]}`.
+  final dynamic details;
   bool get isNetwork => status == 0;
   @override
   String toString() => message;
@@ -178,7 +181,7 @@ class ApiClient {
     }
     if (res.statusCode >= 400) {
       final m = data is Map ? data : const {};
-      throw ApiException(res.statusCode, (m['message'] as String?) ?? 'Request failed (${res.statusCode}).', code: m['error'] as String?);
+      throw ApiException(res.statusCode, (m['message'] as String?) ?? 'Request failed (${res.statusCode}).', code: m['error'] as String?, details: m['details']);
     }
     return data;
   }

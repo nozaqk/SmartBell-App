@@ -26,4 +26,14 @@ void main() {
     n.applyPending();
     expect(n.tab, 0);
   });
+
+  test('classes route opens the lecturer classes screen from the home tab', () {
+    final n = NavState();
+    n.select(2);
+    n.routeFromPush('classes', ready: true);
+    expect(n.tab, NavState.tabHome);
+    expect(n.openClasses, true);
+    n.classesOpened();
+    expect(n.openClasses, false);
+  });
 }

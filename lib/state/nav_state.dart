@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 class NavState extends ChangeNotifier {
   int tab = 0;
   bool openAnnouncements = false;
+  bool openClasses = false;
   String? _pendingRoute;
 
   static const tabHome = 0, tabTimetable = 1, tabNotifications = 2, tabProfile = 3;
@@ -29,6 +30,10 @@ class NavState extends ChangeNotifier {
       case 'timetable':
         tab = tabTimetable;
         break;
+      case 'classes':
+        tab = tabHome;
+        openClasses = true;
+        break;
       case 'announcements':
         tab = tabHome;
         openAnnouncements = true;
@@ -45,10 +50,12 @@ class NavState extends ChangeNotifier {
   }
 
   void announcementsOpened() => openAnnouncements = false;
+  void classesOpened() => openClasses = false;
 
   void reset() {
     tab = 0;
     openAnnouncements = false;
+    openClasses = false;
     _pendingRoute = null;
   }
 }

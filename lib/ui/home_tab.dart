@@ -6,6 +6,7 @@ import '../state/data_store.dart';
 import '../state/nav_state.dart';
 import 'announcements_screen.dart';
 import 'exams_screen.dart';
+import 'my_classes_screen.dart';
 import 'widgets.dart';
 
 class HomeTab extends StatelessWidget {
@@ -58,6 +59,10 @@ class HomeTab extends StatelessWidget {
           const SizedBox(height: 16),
           Row(children: [
             Expanded(child: _action(context, Icons.campaign_outlined, 'Announcements', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AnnouncementsScreen())))),
+            if (lecturer) ...[
+              const SizedBox(width: 12),
+              Expanded(child: _action(context, Icons.edit_calendar_outlined, 'Reschedule class', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyClassesScreen())))),
+            ],
             if (p.isStudent) ...[
               const SizedBox(width: 12),
               Expanded(child: _action(context, Icons.fact_check_outlined, 'Exam timetable', () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ExamsScreen())))),
