@@ -34,7 +34,8 @@ class HomeTab extends StatelessWidget {
         children: [
           Text('${greeting(DateTime.now().hour)},', style: TextStyle(color: c.onSurfaceVariant)),
           Text(p.displayName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-          Text(lecturer ? [if (p.department != null) p.department!, p.schoolName].join(' · ') : [if (p.classGroups.isNotEmpty) p.classGroups.join(', '), p.schoolName].join(' · '), style: TextStyle(color: c.outline)),
+          // Students' department, semester and school are on the Profile tab; only lecturers get this line.
+          if (lecturer) Text([if (p.department != null) p.department!, p.schoolName].join(' · '), style: TextStyle(color: c.outline)),
           if (data.dashboardError != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text('Showing saved data: ${data.dashboardError}', style: TextStyle(color: c.error, fontSize: 12))),
           const SizedBox(height: 16),
           if (d.isHoliday)
