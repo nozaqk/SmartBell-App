@@ -69,7 +69,7 @@ class Profile {
     required this.timezone,
     this.email,
     this.title,
-    this.level,
+    this.semester,
     this.programme,
     this.department,
     this.stream,
@@ -78,7 +78,7 @@ class Profile {
   });
 
   final String id, role, fullName, loginId, schoolName, timezone;
-  final String? email, title, level, programme, department;
+  final String? email, title, semester, programme, department;
   final StudyStream? stream;
   final List<String> classGroups; // students: groups they belong to
   final List<String> courses; // lecturers: "CODE - Name"
@@ -102,7 +102,7 @@ class Profile {
       schoolName: _str(school['name']),
       timezone: _str(school['timezone'], 'Africa/Accra'),
       title: l?['title'] as String?,
-      level: s?['level'] == null ? null : _str(s!['level']),
+      semester: s?['semester'] as String?,
       programme: s?['programme'] as String?,
       department: ((s ?? l)?['department']) as String?,
       stream: StudyStream.tryParse(s?['stream']),

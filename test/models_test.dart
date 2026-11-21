@@ -21,7 +21,7 @@ void main() {
       'profile': {
         'id': 'u1', 'role': 'STUDENT', 'fullName': 'Ama Boateng', 'loginId': 'S-001', 'email': null,
         'school': {'name': 'Demo School', 'timezone': 'Africa/Accra', 'logoUrl': null},
-        'student': {'level': 200, 'programme': 'BEng Electronics', 'department': 'Electronics', 'stream': 'WEEKEND', 'classGroups': [{'id': 'g1', 'name': 'Level 200'}]},
+        'student': {'semester': 'Semester 1 (2026/2027)', 'programme': 'BEng Electronics', 'department': 'Electronics', 'stream': 'WEEKEND', 'classGroups': [{'id': 'g1', 'name': 'Level 200'}]},
       },
       'nextClass': {...entry, 'date': '2026-11-09', 'dayOffset': 1, 'countdownSeconds': 3600},
       'today': [entry],
@@ -36,7 +36,7 @@ void main() {
     expect(d.profile.department, 'Electronics');
     expect(d.profile.stream?.label, 'Weekend');
     expect(d.profile.classGroups, ['Level 200']);
-    expect(d.profile.level, '200');
+    expect(d.profile.semester, 'Semester 1 (2026/2027)');
     expect(d.nextClass!.dayOffset, 1);
     expect(d.nextClass!.countdownSeconds, 3600);
     expect(d.nextClass!.entry.courseCode, 'ECE 204');
